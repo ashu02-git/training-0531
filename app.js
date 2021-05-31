@@ -4,9 +4,6 @@ const ejs = require('ejs');
 const moment = require('moment');
 const url = require('url');
 
-moment.locale('js');
-let datetoday = moment().format('LL');
-
 const index = fs.readFileSync('./index.ejs','utf8');
 const sample = fs.readFileSync('./sample.ejs','utf8');
 const style_css = fs.readFileSync('./style.css','utf8');
@@ -15,20 +12,28 @@ const style_css = fs.readFileSync('./style.css','utf8');
 let server = http.createServer(getFromCliant);
 server.listen(3000);
 console.log('Server start!')
-console.log(datetoday);
 
 function getFromCliant(req,res){
 
-    let url_parts = url.parse(req.url);
-    console.log(url_parts);
+    let url_parts = url.parse(req.url, true);
 
     switch(url_parts.pathname){
 
         case '/':
+
+            var query = url_parts.query;
+            console.log(url_parts.query);
+            if (query.msg != undefined){
+                var message = 'You said to me, "' + query.msg + '."';
+            } else {
+                var message = 'You said nothing';
+            }
+
             var content = ejs.render(index,{
                 title: 'Kikuchannel',
-                today:datetoday,
+                message: message,
             }); 
+
             res.writeHead(200, {'Content-Type':'text/html'});
             res.write(content);
             res.end();

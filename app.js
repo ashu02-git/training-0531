@@ -1,8 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const ejs = require('ejs');
-const moment = require('moment');
 const url = require('url');
+const qs = require('querystring');
 
 const index = fs.readFileSync('./index.ejs','utf8');
 const sample = fs.readFileSync('./sample.ejs','utf8');
@@ -20,33 +20,11 @@ function getFromCliant(req,res){
     switch(url_parts.pathname){
 
         case '/':
-
-            var query = url_parts.query;
-            console.log(url_parts.query);
-            if (query.msg != undefined){
-                var message = 'You said to me, "' + query.msg + '."';
-            } else {
-                var message = 'You said nothing';
-            }
-
-            var content = ejs.render(index,{
-                title: 'Kikuchannel',
-                message: message,
-            }); 
-
-            res.writeHead(200, {'Content-Type':'text/html'});
-            res.write(content);
-            res.end();
+            response_index(req, res);
             break;
 
         case '/sample':
-            var content = ejs.render(sample,{
-                title: 'introduction',
-                today:datetoday,
-            }); 
-            res.writeHead(200, {'Content-Type':'text/html'});
-            res.write(content);
-            res.end();
+            response_sample(req, res);
             break;
 
         case '/style.css':
@@ -60,5 +38,48 @@ function getFromCliant(req,res){
             res.end('no page...');
             break;
 
+    }
+}
+
+function response_index(req, res) {
+    let message = 'What do you want to tell?';
+    let content = ejs.render(index,{
+        title: 'Kikuchannel',
+        message: message
+    });
+
+    res.writeHead(200, {'Content-Type':'text/html'});
+    res.write(content);
+    res.end();
+}
+
+function response_sample(req, res){
+    let message = 'ようこそ！';
+    if (req.method == 'POST'){
+        let body = '';
+
+        req.on('data', (data) => {
+            body += data;
+        });
+        req.on('end', () => {
+            let post_data = qs.parse(body);
+            msg = 'You said to me "' + post_data.msg +'".';
+            let content = ejs.render(sample, {
+                title: "Thanks!",
+                message: msg
+            });
+            res.writeHead(200, {'Content-Type':'text/html'});
+            res.write(content);
+            res.end();
+        });
+    } else {
+        let msg = "ページがありません。"
+        let content = ejs.render(sample, {
+                title: "Thanks.",
+                message: msg
+        });
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.write(content);
+        res.end();
     }
 }
